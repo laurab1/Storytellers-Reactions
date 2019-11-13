@@ -2,3 +2,4 @@ venv/
 .vscode/
 __pycache__/
 storytellers_reactions.egg_info/
+reactions.db/
