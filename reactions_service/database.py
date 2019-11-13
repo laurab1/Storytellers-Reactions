@@ -6,8 +6,6 @@ from flask_sqlalchemy import SQLAlchemy
 
 from sqlalchemy.ext.hybrid import hybrid_property
 
-from werkzeug.security import check_password_hash, generate_password_hash
-
 DATABASE_NAME = 'sqlite:///reactions.db'
 
 db = SQLAlchemy()

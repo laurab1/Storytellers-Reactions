@@ -46,11 +46,11 @@ paths:
                     description: feedback message
         '400':
           description: Reaction not posted
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    error:
-                      type: string
-                      description: error message 
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: error message 
