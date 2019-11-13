@@ -9,6 +9,8 @@ info:
 paths:
   '/stories/{storyid}/react':
     post:
+      security: 
+        - csrf_access_token: []
       operationId: post_story_react
       description: post a reaction to the story identified by 'storyid'
       requestBody:
@@ -18,10 +20,9 @@ paths:
             schema:
               type: object
               properties:
-                like:
+                react:
                   type: string
-                user_id:
-                  type: integer
+                  example: 'like'
       parameters:
         - name: storyid
           in: path
@@ -50,3 +51,11 @@ paths:
                   error:
                     type: string
                     description: error message
+
+components:
+  
+  securitySchemes:
+    csrf_access_token: 
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
