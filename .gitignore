@@ -1,5 +1,7 @@
 venv/
 .vscode/
 __pycache__/
-storytellers_reactions.egg_info/
+service.egg_info/
 reactions.db/
+tox.ini/
+.vim/
