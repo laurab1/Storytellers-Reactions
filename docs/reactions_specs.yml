@@ -1,0 +1,137 @@
+openapi: 3.0.0
+info:
+  title: Storytellers Reactions Service
+  description: Provides functionalities for Storytellers Reactions
+  license:
+    name: APLv2
+    url: 'https://www.apache.org/licenses/LICENSE-2.0.html'
+  version: "1.0.0-oas3"
+paths:
+  '/users/{userid}/get_react':
+    get:
+      operationId: get_user_react
+      description: retrieves all reactions from a given user
+      parameters:
+        - name: userid
+          in: path
+          description: ID of the user for wich we retrieve the reactions
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User reactions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  likes:
+                    type: integer
+                    description: number of likes
+                    example: 10
+                  dislikes:
+                    type: integer
+                    description: number of dislikes
+                    example: 14
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: error message
+                    example: 'user not found'
+  '/stories/{storyid}/get_react':
+    get:
+      operationId: get_story_react
+      description: retrieves all reactions to a given story
+      parameters:
+        - name: storyid
+          in: path
+          description: ID of the story for which we retrieve the reactions
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Story reactions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  likes:
+                    type: integer
+                    description: number of likes
+                    example: 31
+                  dislikes:
+                    type: integer
+                    description: number of dislikes
+                    example: 12
+        '404':
+          description: Story not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: error message
+                    example: 'story not found'
+  '/stories/{storyid}/react':
+    post:
+      security: 
+        - csrf_access_token: []
+      operationId: post_story_react
+      description: posts a reaction to the story identified by 'storyid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                react:
+                  type: string
+                  example: 'like'
+      parameters:
+        - name: storyid
+          in: path
+          description: ID of the story to react to
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Reaction posted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: feedback message
+        '400':
+          description: Reaction not posted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: error message
+
+components:
+  
+  securitySchemes:
+    csrf_access_token: 
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

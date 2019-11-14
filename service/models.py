@@ -1,6 +1,4 @@
-import datetime as dt
 import json
-from random import randint
 
 from flask_sqlalchemy import SQLAlchemy
 
