@@ -53,7 +53,6 @@ def test_react_twice(app, client):
     assert reply.status_code == 400
     assert reply.get_json().message == 'you\'ve already disliked this story!'
 
-#TODO: test get
 
 def test_get_user_react_success(app, client, reactions, requests_mock):
     reactions.client = client
