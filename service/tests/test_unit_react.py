@@ -102,4 +102,4 @@ def test_get_story_react_failure(app, client, reactions, requests_mock):
 
     reply = reactions.get_story_react(MOCK_STORY_REACT)
     assert reply.status_code == 404
-    assert reply.get_json().code == 'unregistered story' #to add the error case in errors.py
+    assert reply.get_json().code == 'unregistered story'
