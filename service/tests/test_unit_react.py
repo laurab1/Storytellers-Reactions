@@ -76,10 +76,10 @@ def test_get_user_bad_syntax(app, client, reactions, requests_mock):
    reactions.client = client
 
     requests_mock.get(f'{app.config["USERS_ENDPOINT"]}/api/users/pippo/get_react',
-                      status_code=404)
+                      status_code=400)
 
     reply = reactions.get_user_react('pippo')
-    assert reply.status_code == 404
+    assert reply.status_code == 400
     assert reply.get_json().code == 'E321'
 
 
@@ -97,7 +97,7 @@ def test_get_story_react_failure(app, client, reactions, requests_mock):
     reactions.client = client
 
     requests_mock.get(f'{app.config["USERS_ENDPOINT"]}/api/stories/0/get_react',
-                      status_code=200)
+                      status_code=404)
 
     reply = reactions.get_story_react(0)
     assert reply.status_code == 404
@@ -108,8 +108,8 @@ def test_get_story_react_bad_syntax(app, client, reactions, requests_mock):
     reactions.client = client
 
     requests_mock.get(f'{app.config["USERS_ENDPOINT"]}/api/stories/lafattoriadeglianimali/get_react',
-                      status_code=200)
+                      status_code=400)
 
     reply = reactions.get_story_react('lafattoriadeglianimali')
-    assert reply.status_code == 404
+    assert reply.status_code == 400
     assert reply.get_json().code == 'E331'

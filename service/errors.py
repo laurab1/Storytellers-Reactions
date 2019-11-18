@@ -50,8 +50,9 @@ EP_DICT = {
     '321': (400, 'The user identifier must be an integer'),
     '322': (404, 'You must provide an identifier associated to a registered user'),
     '331': (400, 'The story identifier must be an integer'),
-    '332': (401, 'The requested story is a draft'),
+    '332': (403, 'The requested story is a draft'),
     '333': (404, 'The requested story does not exist')
+    '334': (410, 'The requested story was deleted')
 }
 
 
