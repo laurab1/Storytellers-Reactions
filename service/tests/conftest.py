@@ -1,7 +1,7 @@
 import json
 import pytest
 
-from gateway.app import create_app
+from service.app import create_app
 
 
 @pytest.fixture
@@ -31,30 +31,24 @@ def client(app, client_factory):
 
 
 @pytest.fixture
-def auth():
+def reactions():
 
-    class AuthActions:
+    class ReactionsActions:
 
         def __init__(self):
             self.client = None
 
-        def signup(self, data):
+        def get_user_react(self, userid):
             assert self.client is not None
-            return self.client.post('/signup',
-                                    data=json.dumps(data),
+            return self.client.get('/users/{userid}/get_react')
+
+        def get_story_react(self, storyid):
+            assert self.client is not None
+            return self.client.get('/stories/{storyid}/get_react')
+
+        def post_story_react(self, data):
+            assert self.client is not None
+            return self.client.post('/stories/<storyid>/react',
+                                    data=json.dumps(data),   
                                     content_type='application/json')
-
-        def login(self, data):
-            assert self.client is not None
-            return self.client.post('/login',
-                                    data=json.dumps(data),
-                                    content_type='application/json')
-
-        def logout(self, login_token=None):
-            assert self.client is not None
-            if login_token is not None:
-                return self.client.post('/logout',
-                                        headers={'Set-Cookie': login_token})
-            return self.client.post('/logout')
-
-    return AuthActions()
+    return ReactionsActions()

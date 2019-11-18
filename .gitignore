@@ -1,7 +1,7 @@
 venv/
 .vscode/
 __pycache__/
-service.egg_info/
+service.egg-info/
 reactions.db/
 tox.ini/
 .vim/

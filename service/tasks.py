@@ -1,6 +1,6 @@
 from flask import current_app
 
-from gateway.extensions import celery
+from service.extensions import celery
 
 
 @celery.task
