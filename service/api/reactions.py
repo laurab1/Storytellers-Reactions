@@ -2,35 +2,53 @@ from flask import Blueprint
 from service.extensions import db
 from flask import current_app as app
 from flask import jsonify
+from flask_jwt_extended import (
+    JWTManager, jwt_required, create_access_token,
+    get_jwt_identity
+)
+from flask import abort
+from service.models import db, Reaction
+import json
+from flask import request
+
+
 
 reactions = Blueprint('reactions', __name__)
 
 
-@reactions.route('/users/{userid}/get_react', methods=['GET'])
-def get_user_react():
+@reactions.route('/users/<userid>/get_react', methods=['GET'])
+def get_user_react(userid):
     '''
     Retrieves all reactions from a given user
     Returns:
         200 -> User reactions retrieved successfully
         404 -> User not found
     '''
-    pass
+    q = Reaction.query.filter_by(reactor_id=userid)
+            
+    likes, dislikes = _compute_reacts(q)
+           
+    return jsonify({'likes':likes, 'dislikes':dislikes})        
 
 
-@reactions.route('/stories/{storyid}/get_react', methods=['GET'])
-def get_story_react():
+@reactions.route('/stories/<storyid>/get_react', methods=['GET'])
+def get_story_react(storyid):
     '''
     Retrieves all reactions to a given story
     Returns:
         200 -> Story reactions retrieved successfully
         404 -> Story not found
     '''
-    pass
+    q = Reaction.query.filter_by(story_id=storyid)
+    
+    likes, dislikes = _compute_reacts(q)
+           
+    return jsonify({'likes':likes, 'dislikes':dislikes})
 
 
 @reactions.route('/stories/<storyid>/react', methods=['POST'])
-@jwt_required
-def post_story_react():
+#@jwt_required
+def post_story_react(storyid, auth_token):
     '''
     Process react requests by users to a story
 
@@ -38,44 +56,80 @@ def post_story_react():
         200 -> Successful posting
         400 -> Reaction not posted
     '''
-    s = # get story from Story service
+    s = _story_stub(int(storyid)) # here we should call the Story service...
     
-    if s is None:
+    # check whether the story exists, if it is a draft, or if it was previously deleted
+    if s is 0:
         abort(404, f'The requested story does not exist')
-    if s.deleted:
+    if s is 2:
         abort(410, f'Story {storyid} was deleted')
-    if s.is_draft:
+    if s is 3:
         abort(403, f'The requested story is a draft')
         
-    user_id = # get user from auth
+    # user_id = get user from auth
     
-    # check auth token?
+    #try:
+    #    data = jwt.decode(auth_token, app.config.get('SECRET_KEY'))
+    #    return data['sub']
+    #except jwt.ExpiredSignatureError:
+    #    return 'Signature expired. Please log in again.'
+    #except jwt.InvalidTokenError:
+    #    return 'Invalid token. Please log in again.'
+    
+    userid = 1 # must be obtained from the token
 
-    q = Reaction.query.filter_by(reactor_id=user_id,
-                                 story_id=storyid).one_or_none()
+    q = Reaction.query.filter_by(reactor_id=userid,
+                                 story_id=int(storyid)).one_or_none()
+    
+    payload = request.get_json()
+    removed = False
 
-    react = 1 if 'like' in request.form else -1
+    react = 1 if payload['react'] == 'like' else -1
     if q is None or react != q.reaction_val:
         if q is not None and react != q.reaction_val:
             # remove the old reaction if the new one has different value
             if q.marked:
-                print(current_user.id)
-                remove_reaction.delay(storyid, q.reaction_val)
+                #remove_reaction.delay(storyid, q.reaction_val)
                 removed = True
             db.session.delete(q)
             db.session.commit()
         new_reaction = Reaction()
-        new_reaction.reactor_id = current_user.id
+        new_reaction.reactor_id = userid
         new_reaction.story_id = storyid
         new_reaction.reaction_val = react
         db.session.add(new_reaction)
         db.session.commit()
         db.session.refresh(new_reaction)
         # votes are registered asynchronously by celery tasks
-        add_reaction.delay(current_user.id, storyid, react)
+        #add_reaction.delay(current_user.id, storyid, react)
         message = 'Reaction registered' if not removed else 'Reaction updated'
         return jsonify(message=message)
 
     if react == 1:
         return jsonify(error='You\'ve already liked this story'), 400
     return jsonify(error='You\'ve already disliked this story'), 400
+
+# A simple utility function to compute likes and dislikes
+def _compute_reacts(q):
+    likes = 0
+    dislikes = 0
+    for row in q:
+        if row.reaction_val == 1:
+            likes += 1
+        else:
+            dislikes += 1
+    return likes, dislikes
+
+
+###################################################################################
+# Stupid stub function to emulate the Story service
+
+def _story_stub(storyid):
+    if storyid in range(1,3):
+        return 1
+    elif storyid in range(3,6):
+        return 2
+    elif storyid in range(6,8):
+        return 3
+    else:
+        return 0

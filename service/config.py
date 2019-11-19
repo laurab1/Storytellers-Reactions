@@ -2,12 +2,14 @@
 
 DEBUG = True
 SECRET_KEY = 'change me please'
+#JWT_TOKEN_LOCATION = 'headers'
 
 USERS_ENDPOINT = 'localhost:5001'
 STORIES_ENDPOINT = 'localhost:5002'
 REACTIONS_ENDPOINT = 'localhost:5003'
 SEARCH_ENDPOINT = 'localhost:5004'
 AUTH_ENDPOINT = 'localhost:5005'
+SQLALCHEMY_DATABASE_URI = 'sqlite:///reactions.db'
 
 # Celery
 BROKER_TRANSPORT = 'redis'

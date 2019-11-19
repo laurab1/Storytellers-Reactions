@@ -5,6 +5,7 @@ from flask import Flask
 
 from service.extensions import db, celery
 from service.api.reactions import reactions
+from service.models import db as md
 
 __all__ = ('create_app', 'create_celery')
 
@@ -14,9 +15,13 @@ BLUEPRINTS = (reactions,)
 
 def create_app(config=None, app_name='reactions', blueprints=None):
     app = Flask(app_name)
-
+    
     if config:
         app.config.from_pyfile(config)
+        
+    md.init_app(app)
+    md.create_all(app=app)
+
 
     if blueprints is None:
         blueprints = BLUEPRINTS
