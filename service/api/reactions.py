@@ -12,14 +12,13 @@ import json
 from flask import request
 
 
-
 reactions = Blueprint('reactions', __name__)
 
 
 @reactions.route('/users/<userid>/get_react', methods=['GET'])
 def get_user_react(userid):
     '''
-    Retrieves all reactions from a given user
+    Retrieves all the reactions from a given user
     Returns:
         200 -> User reactions retrieved successfully
         404 -> User not found
@@ -34,7 +33,7 @@ def get_user_react(userid):
 @reactions.route('/stories/<storyid>/get_react', methods=['GET'])
 def get_story_react(storyid):
     '''
-    Retrieves all reactions to a given story
+    Retrieves all the reactions to a given story
     Returns:
         200 -> Story reactions retrieved successfully
         404 -> Story not found
@@ -48,7 +47,7 @@ def get_story_react(storyid):
 
 @reactions.route('/stories/<storyid>/react', methods=['POST'])
 #@jwt_required
-def post_story_react(storyid, auth_token):
+def post_story_react(storyid):
     '''
     Process react requests by users to a story
 
@@ -56,17 +55,20 @@ def post_story_react(storyid, auth_token):
         200 -> Successful posting
         400 -> Reaction not posted
     '''
-    s = _story_stub(int(storyid)) # here we should call the Story service...
+    try:
+        sid = int(storyid)
+    except ValueError:
+        return jsonify(error='The story identifier must be an integer'), 400
+    
+    s = _story_stub(sid) # here we should call the Story service...
     
     # check whether the story exists, if it is a draft, or if it was previously deleted
     if s is 0:
-        abort(404, f'The requested story does not exist')
+        return jsonify(error='The requested story does not exist'), 404
     if s is 2:
-        abort(410, f'Story {storyid} was deleted')
+        return jsonify(error='Story {storyid} was deleted'), 410
     if s is 3:
-        abort(403, f'The requested story is a draft')
-        
-    # user_id = get user from auth
+        return jsonify(error='The requested story is a draft'), 403
     
     #try:
     #    data = jwt.decode(auth_token, app.config.get('SECRET_KEY'))
@@ -79,7 +81,7 @@ def post_story_react(storyid, auth_token):
     userid = 1 # must be obtained from the token
 
     q = Reaction.query.filter_by(reactor_id=userid,
-                                 story_id=int(storyid)).one_or_none()
+                                 story_id=sid).one_or_none()
     
     payload = request.get_json()
     removed = False
@@ -95,7 +97,7 @@ def post_story_react(storyid, auth_token):
             db.session.commit()
         new_reaction = Reaction()
         new_reaction.reactor_id = userid
-        new_reaction.story_id = storyid
+        new_reaction.story_id = sid
         new_reaction.reaction_val = react
         db.session.add(new_reaction)
         db.session.commit()
