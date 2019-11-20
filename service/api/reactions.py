@@ -10,7 +10,7 @@ from flask import abort
 from service.models import db, Reaction
 import json
 from flask import request
-from service.tasks import *
+from service import errors, tasks
 
 
 reactions = Blueprint('reactions', __name__)
@@ -55,7 +55,7 @@ def get_story_react(storyid):
 
 
 @reactions.route('/stories/<storyid>/react', methods=['POST'])
-#@jwt_required
+@errors.auth_required('322')
 def post_story_react(storyid):
     '''
     Process react requests by users to a story
@@ -80,13 +80,20 @@ def post_story_react(storyid):
     value = 'react' in payload
     
     if value is False:
-        return jsonify(error='Reaction message must not be empty'), 400
+        return errors.reponse('314')
     
     if payload['react'] != 'like' and payload['react'] != 'dislike':
-        return jsonify(error='Reaction value must be \'like\' or \'dislike\''), 400
+        return errors.response('313')
     
     # ERROR CHECK (user)
-    userid = 1 # must be obtained from the token
+    current_user = get_jwt_identity()
+    if current_user is None: # unregistered user
+        return errors.response('322')
+    
+    try:    
+        userid = int(current_user['id'])
+    except ValueError:
+        return errors.response('321')
 
     removed = False
     q = Reaction.query.filter_by(reactor_id=userid,
@@ -112,8 +119,8 @@ def post_story_react(storyid):
         return jsonify(message=message)
 
     if react == 1:
-        return jsonify(error='You\'ve already liked this story'), 400
-    return jsonify(error='You\'ve already disliked this story'), 400
+        return errors.response('311')
+    return errors.response('312')
 
 
 ###################################### UTILITY FUNCTIONS ######################################
@@ -148,18 +155,18 @@ def _check_story(storyid):
     try:
         sid = int(storyid)
     except ValueError:
-        return jsonify(error='The story identifier must be an integer'), 400
+        return errors.response('331')
     
     s = _story_stub(sid) # here we should call the Story service...
     
     # checks whether the story exists, if it is a draft, or if it was previously deleted
     if s is 0:
-        return jsonify(error='The requested story does not exist'), 404
+        return errors.response('333')
     if s is 2:
         remove_deleted.delay(storyid)
-        return jsonify(error='Story ' + storyid + ' was deleted'), 410
+        return errors.response('334')
     if s is 3:
-        return jsonify(error='The requested story is a draft'), 403
+        return errors.response('332')
     
     return None, sid
 

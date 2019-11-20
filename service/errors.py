@@ -45,13 +45,11 @@ EP_DICT = {
     '312': (400, 'You\'ve already disliked this story'),
     '313': (400, 'Reaction value must be \'like\' or \'dislike\''),
     '314': (400, 'Reaction message must not be empty'),
-    '315': (401, 'You must provide an authentication token'),
-    '316': (401, 'You must provide a valid authentication token'),
     '321': (400, 'The user identifier must be an integer'),
     '322': (404, 'You must provide an identifier associated to a registered user'),
     '331': (400, 'The story identifier must be an integer'),
     '332': (403, 'The requested story is a draft'),
-    '333': (404, 'The requested story does not exist')
+    '333': (404, 'The requested story does not exist'),
     '334': (410, 'The requested story was deleted')
 }
 
