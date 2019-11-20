@@ -16,6 +16,6 @@ class Reaction(db.Model):
     
     reaction_val = db.Column(db.Integer)
 
-    # Asynchronously updated when the story service confirms
-    # that the story 'storyid' exixsts
-    marked = db.Column(db.Boolean, default=False)
+    # marked should be no longer needed, as we update immediately
+    # and send an asynchronous update to the story service
+    # marked = db.Column(db.Boolean, default=False)
