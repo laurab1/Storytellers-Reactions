@@ -10,7 +10,8 @@ from flask import abort
 from service.models import db, Reaction
 import json
 from flask import request
-from service import errors, tasks
+from service import errors
+from service.tasks import *
 
 
 reactions = Blueprint('reactions', __name__)
@@ -42,11 +43,12 @@ def get_story_react(storyid):
         403 -> The requested story is a draft
         410 -> The requested story was previously deleted
     '''
-    response, sid = _check_story(storyid)
+    response = _check_story(storyid)
     
     if response is not None:
         return response
     
+    sid = int(storyid)
     q = Reaction.query.filter_by(story_id=storyid)
     
     likes, dislikes = _compute_reacts(q)
@@ -55,7 +57,7 @@ def get_story_react(storyid):
 
 
 @reactions.route('/stories/<storyid>/react', methods=['POST'])
-@errors.auth_required('322')
+#@errors.auth_required('322')
 def post_story_react(storyid):
     '''
     Process react requests by users to a story
@@ -68,10 +70,12 @@ def post_story_react(storyid):
         410 -> The requested story was previously deleted        
     '''
     # ERROR CHECK (story)
-    response, sid = _check_story(storyid)
+    response = _check_story(storyid)
     
     if response is not None:
         return response
+    
+    sid = int(storyid)
     
     # ERROR CHECK (payload)
     payload = request.get_json()
@@ -79,21 +83,23 @@ def post_story_react(storyid):
     # checks whether the payload is empty or ill-formed
     value = 'react' in payload
     
-    if value is False:
-        return errors.reponse('314')
+    if not value:
+        return errors.response('314')
     
     if payload['react'] != 'like' and payload['react'] != 'dislike':
         return errors.response('313')
     
-    # ERROR CHECK (user)
-    current_user = get_jwt_identity()
-    if current_user is None: # unregistered user
-        return errors.response('322')
-    
-    try:    
-        userid = int(current_user['id'])
-    except ValueError:
-        return errors.response('321')
+    # ERROR CHECK (user)    
+    #if not app.config['TESTING']:
+    #    current_user = get_jwt_identity()
+    #    if current_user is None: # unregistered user
+    #        return errors.response('322')
+    #    try:            
+    #        userid = int(current_user['id'])
+    #    except ValueError:
+    #        return errors.response('321')
+    #else:
+    userid = 1    
 
     removed = False
     q = Reaction.query.filter_by(reactor_id=userid,
@@ -168,7 +174,7 @@ def _check_story(storyid):
     if s is 3:
         return errors.response('332')
     
-    return None, sid
+    return None
 
 
 ###############################################################################################

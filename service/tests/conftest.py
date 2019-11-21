@@ -40,15 +40,15 @@ def reactions():
 
         def get_user_react(self, userid):
             assert self.client is not None
-            return self.client.get('/users/{userid}/get_react')
+            return self.client.get(f'/users/{userid}/get_react')
 
         def get_story_react(self, storyid):
             assert self.client is not None
-            return self.client.get('/stories/{storyid}/get_react')
+            return self.client.get(f'/stories/{storyid}/get_react')
 
-        def post_story_react(self, data):
+        def post_story_react(self, data, storyid):
             assert self.client is not None
-            return self.client.post('/stories/<storyid>/react',
+            return self.client.post(f'/stories/{storyid}/react',
                                     data=json.dumps(data),   
                                     content_type='application/json')
     return ReactionsActions()
