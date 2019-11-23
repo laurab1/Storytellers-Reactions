@@ -7,7 +7,7 @@ from service.app import create_app
 
 @pytest.fixture
 def app():
-    app = create_app(config='service/tests/config_test.py')
+    app = create_app(config='tests/config_test.py')
 
     return app
 
