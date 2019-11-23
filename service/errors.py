@@ -6,7 +6,7 @@ from flask import jsonify, request
 Constant value representing the endpoint. This has to be written with two
 uppercase letter, eg. API Gateway -> AG)
 '''
-EP_CODE = 'RS' #Reactions service identifier
+EP_CODE = 'AR' # Reactions service identifier
 
 '''
 Dictionary with all errors related to this service and the

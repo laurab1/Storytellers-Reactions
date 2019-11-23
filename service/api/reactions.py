@@ -1,3 +1,5 @@
+import json
+import requests
 from flask import Blueprint
 from service.extensions import db
 from flask import current_app as app
@@ -8,7 +10,7 @@ from flask_jwt_extended import (
 )
 from flask import abort
 from service.models import db, Reaction
-import json
+from requests.exceptions import Timeout
 from flask import request
 from service import errors
 from service.tasks import *
@@ -26,6 +28,25 @@ def get_user_react(userid):
         404 -> User not found
     '''
     
+    # ERROR CHECK
+    # Raises exception if the provided id is not an integer
+    try:
+        uid = int(userid)
+    except ValueError:
+        return errors.response('321')
+    
+    # Tries to retrieve the user from the User service
+    try:
+        resp = requests.get(f'{app.config["USERS_ENDPOINT"]}/user/{userid}',
+                                        timeout=app.config['REQUESTS_TIMEOUT'],
+                                        json=request.json)
+    except Timeout:
+        return jsonify({}), 500
+    
+    if resp.status_code == 404: # Not registered user
+        return errors.response('322')
+    
+    # Retrieve reactions and compute them
     q = Reaction.query.filter_by(reactor_id=userid)
             
     likes, dislikes = _compute_reacts(q)
@@ -43,6 +64,7 @@ def get_story_react(storyid):
         403 -> The requested story is a draft
         410 -> The requested story was previously deleted
     '''
+    # Checks
     response = _check_story(storyid)
     
     if response is not None:
@@ -51,13 +73,14 @@ def get_story_react(storyid):
     sid = int(storyid)
     q = Reaction.query.filter_by(story_id=storyid)
     
+    # Compute reactions to the story
     likes, dislikes = _compute_reacts(q)
            
     return jsonify({'likes':likes, 'dislikes':dislikes})
 
 
 @reactions.route('/stories/<storyid>/react', methods=['POST'])
-#@errors.auth_required('322')
+@jwt_required
 def post_story_react(storyid):
     '''
     Process react requests by users to a story
@@ -89,17 +112,13 @@ def post_story_react(storyid):
     if payload['react'] != 'like' and payload['react'] != 'dislike':
         return errors.response('313')
     
-    # ERROR CHECK (user)    
-    #if not app.config['TESTING']:
-    #    current_user = get_jwt_identity()
-    #    if current_user is None: # unregistered user
-    #        return errors.response('322')
-    #    try:            
-    #        userid = int(current_user['id'])
-    #    except ValueError:
-    #        return errors.response('321')
-    #else:
-    userid = 1    
+    # ERROR CHECK (user)
+    # Here I just need if the user is actually registered
+    try: 
+        current_user = get_jwt_identity()
+    except Exception:
+        errors.response('322')
+    userid = current_user['user_id']
 
     removed = False
     q = Reaction.query.filter_by(reactor_id=userid,
@@ -108,7 +127,7 @@ def post_story_react(storyid):
     react = 1 if payload['react'] == 'like' else -1
     if q is None or react != q.reaction_val:
         if q is not None and react != q.reaction_val:
-            # remove the old reaction if the new one has different value
+            # Remove the old reaction if the new one has different value
             db.session.delete(q)
             db.session.commit()
             removed = True
@@ -163,15 +182,20 @@ def _check_story(storyid):
     except ValueError:
         return errors.response('331')
     
-    s = _story_stub(sid) # here we should call the Story service...
+    try:
+        resp = requests.get(f'{app.config["STORIES_ENDPOINT"]}/stories/{storyid}',
+                                        timeout=app.config['REQUESTS_TIMEOUT'],
+                                        json=request.json)
+    except Timeout:
+        return jsonify({}), 500
     
     # checks whether the story exists, if it is a draft, or if it was previously deleted
-    if s is 0:
+    if resp.status_code == 404: # the story does not exists
         return errors.response('333')
-    if s is 2:
+    if resp.status_code == 410:
         remove_deleted.delay(storyid)
         return errors.response('334')
-    if s is 3:
+    if resp.status_code == 403:
         return errors.response('332')
     
     return None
@@ -189,12 +213,3 @@ def _story_stub(storyid):
         return 3
     else:
         return 0
-    
-    
-#try:
-#    data = jwt.decode(auth_token, app.config.get('SECRET_KEY'))
-#    return data['sub']
-#except jwt.ExpiredSignatureError:
-#    return 'Signature expired. Please log in again.'
-#except jwt.InvalidTokenError:
-#    return 'Invalid token. Please log in again.'

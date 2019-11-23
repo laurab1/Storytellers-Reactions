@@ -7,6 +7,8 @@ from service.extensions import db, celery
 from service.api.reactions import reactions
 from service.models import db as md
 
+from flask_jwt_extended import JWTManager
+
 __all__ = ('create_app', 'create_celery')
 
 # Import blueprints and insert in the list
@@ -22,7 +24,8 @@ def create_app(config=None, app_name='reactions', blueprints=None):
     md.init_app(app)
     md.create_all(app=app)
 
-
+    jwt = JWTManager(app)
+    
     if blueprints is None:
         blueprints = BLUEPRINTS
 
