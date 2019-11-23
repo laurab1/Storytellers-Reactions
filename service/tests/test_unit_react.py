@@ -1,4 +1,5 @@
 from flask import url_for
+from service.models import db
 
 MOCK_LIKE_OK = {'react': 'like'}
 MOCK_DISLIKE_OK = {'react': 'dislike'}
@@ -9,6 +10,7 @@ MOCK_TOKEN_IDENTITY_1 = {'user_id': 1,
 
 
 def test_react_success(app, client, reactions, requests_mock, jwt_token):
+    
     reactions.client = client
     
     token = jwt_token.create_token(MOCK_TOKEN_IDENTITY_1)
