@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/laurab1/Storytellers-Reactions.svg?branch=testBranch)](https://travis-ci.org/laurab1/Storytellers-Reactions)
-[![Coverage Status](https://coveralls.io/repos/github/laurab1/Storytellers-Reactions/badge.svg?branch=develop)](https://coveralls.io/github/laurab1/Storytellers-Reactions?branch=develop)
+[![Build Status](https://travis-ci.org/laurab1/Storytellers-Reactions.svg?branch=master)](https://travis-ci.org/laurab1/Storytellers-Reactions?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/laurab1/Storytellers-Reactions/badge.svg?branch=master)](https://coveralls.io/github/laurab1/Storytellers-Reactions?branch=master)
 
 # Reaction microservice for Dice-with-microservices
 
