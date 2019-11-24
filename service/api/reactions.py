@@ -114,9 +114,8 @@ def post_story_react(storyid):
     
     # ERROR CHECK (user)
     # Here I just need if the user is actually registered
-    try: 
-        current_user = get_jwt_identity()
-    except Exception:
+    current_user = get_jwt_identity()
+    if current_user is None:
         errors.response('322')
     userid = current_user['user_id']
 
