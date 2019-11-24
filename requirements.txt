@@ -2,5 +2,4 @@ celery==4.3.0
 Flask==1.1.1
 redis==3.3.11
 requests==2.22.0
-Flask-SQLAlchemy
-flask_jwt_extended
+flask_jwt_extended==3.24.1
