@@ -72,28 +72,3 @@ def response(code):
         'message': message
     }), status_code
 
-
-def auth_required(error_code):
-    '''
-    Decorator for Flask view that requires an authentication token.
-
-    Params:
-        error_code -> The error code associated to this view
-
-    Returns:
-        If the token is not present then returns the error message associated
-        to error_code, otherwise the normal return value of the wrapped
-        function
-    '''
-
-    def _auth_required(func):
-
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            if 'Authorization' not in request.headers:
-                return response(error_code)
-            return func(*args, **kwargs)
-
-        return wrapper
-
-    return _auth_required
