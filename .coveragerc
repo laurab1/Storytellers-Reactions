@@ -1,3 +1,5 @@
 [run]
 omit =
     */tests/conftest.py
+    */tests/config_test.py
+    */config.py
