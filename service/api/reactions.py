@@ -34,7 +34,7 @@ def get_user_react(userid, func_id=2):
     try:
         uid = int(userid)
     except ValueError:
-        return errors.response('020')
+        return errors.response(f'{BP_ID}{func_id}0')
     
     # Tries to retrieve the user from the User service
     try:
@@ -45,7 +45,7 @@ def get_user_react(userid, func_id=2):
         return jsonify({}), 500
     
     if resp.status_code == 404: # Not registered user
-        return errors.response('021')
+        return errors.response(f'{BP_ID}{func_id}1')
     
     # Retrieve reactions and compute them
     q = Reaction.query.filter_by(reactor_id=userid)
@@ -56,7 +56,7 @@ def get_user_react(userid, func_id=2):
 
 
 @reactions.route('/stories/<storyid>/get_react', methods=['GET'])
-def get_story_react(storyid):
+def get_story_react(storyid, func_id=0):
     '''
     Retrieves all the reactions to a given story
     Returns:
@@ -82,7 +82,7 @@ def get_story_react(storyid):
 
 @reactions.route('/stories/<storyid>/react', methods=['POST'])
 @jwt_required
-def post_story_react(storyid):
+def post_story_react(storyid, func_id=1):
     '''
     Process react requests by users to a story
 
@@ -108,16 +108,16 @@ def post_story_react(storyid):
     value = 'react' in payload
     
     if not value:
-        return errors.response('013')
+        return errors.response(f'{BP_ID}{func_id}3')
     
     if payload['react'] != 'like' and payload['react'] != 'dislike':
-        return errors.response('012')
+        return errors.response(f'{BP_ID}{func_id}2')
     
     # ERROR CHECK (user)
     # Here I just need if the user is actually registered
     current_user = get_jwt_identity()
     if current_user is None:
-        errors.response('018')
+        errors.response(f'{BP_ID}{func_id}8')
     userid = current_user['user_id']
 
     removed = False
@@ -154,8 +154,8 @@ def post_story_react(storyid):
         return jsonify(message=message)
 
     if react == 1:
-        return errors.response('010')
-    return errors.response('011')
+        return errors.response(f'{BP_ID}{func_id}0')
+    return errors.response(f'{BP_ID}{func_id}1')
 
 
 ###################################### UTILITY FUNCTIONS ######################################
@@ -191,9 +191,9 @@ def _check_story(storyid, method):
         sid = int(storyid)
     except ValueError:
         if method == 'get':
-            return errors.response('030')
+            return errors.response(f'{BP_ID}30')
         else:
-            return errors.response('014')
+            return errors.response(f'{BP_ID}14')
     
     try:
         resp = requests.get(f'{app.config["STORIES_ENDPOINT"]}/stories/{storyid}',
@@ -205,19 +205,19 @@ def _check_story(storyid, method):
     # checks whether the story exists, if it is a draft, or if it was previously deleted
     if resp.status_code == 404: # the story does not exists
         if method == 'get':
-            return errors.response('032')
+            return errors.response(f'{BP_ID}32')
         else:
-            return errors.response('016')
+            return errors.response(f'{BP_ID}16')
     if resp.status_code == 410:
         remove_deleted.delay(storyid)
         if method == 'get':
-            return errors.response('033')
+            return errors.response(f'{BP_ID}33')
         else:
-            return errors.response('017')
+            return errors.response(f'{BP_ID}17')
     if resp.status_code == 403:
         if method == 'get':
-            return errors.response('031')
+            return errors.response(f'{BP_ID}31')
         else:
-            return errors.response('015')
+            return errors.response(f'{BP_ID}15')
     
     return None
