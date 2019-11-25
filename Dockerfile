@@ -7,6 +7,6 @@ WORKDIR /code
 
 RUN pip install -r requirements.txt
 
-EXPOSE 5000
+EXPOSE 5003
 
 CMD ["gunicorn", "-c", "gunicorn_config.py", "entry:app"]

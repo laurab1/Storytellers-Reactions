@@ -13,44 +13,23 @@ Dictionary with all errors related to this service and the
 corresponding error messages and status_code
 '''
 EP_DICT = {
-    # Auth errors
-    '011': (400, 'You must provide a username'),
-    '012': (400, 'You must provide a password'),
-    '013': (400, 'You must provide an email'),
-    '014': (400, 'Username or email already in use'),
-    '021': (400, 'You must provide a username'),
-    '022': (400, 'You must provide a password'),
-    '023': (403, 'Invalid username or password'),
-    '031': (401, 'You must provide an authentication token'),
-    '032': (401, 'You must provide a valid authentication token'),
-
-    # Users errors
-    '111': (400, 'The identifier must be an integer'),
-    '112': (404, 'You must provide an identifier associated to a registered user'),
-    '121': (401, 'You must provide an authentication token'),
-    '122': (401, 'You must provide a valid authentication token'),
-    '131': (401, 'The identifier must be an integer'),
-    '132': (404, 'You must provide an identifier associated to a registered user'),
-    '133': (401, 'You must provide an authentication token'),
-    '134': (401, 'You must provide a valid authentication token'),
-    '135': (409, 'You are already following the requested user'),
-    '141': (401, 'The identifier must be an integer'),
-    '142': (404, 'You must provide an identifier associated to a registered user'),
-    '143': (401, 'You must provide an authentication token'),
-    '144': (401, 'You must provide a valid authentication token'),
-    '145': (409, 'You are not following the requested user'),
-
     # Reactions errors
-    '311': (400, 'You\'ve already liked this story'),
-    '312': (400, 'You\'ve already disliked this story'),
-    '313': (400, 'Reaction value must be \'like\' or \'dislike\''),
-    '314': (400, 'Reaction message must not be empty'),
-    '321': (400, 'The user identifier must be an integer'),
-    '322': (404, 'You must provide an identifier associated to a registered user'),
-    '331': (400, 'The story identifier must be an integer'),
-    '332': (403, 'The requested story is a draft'),
-    '333': (404, 'The requested story does not exist'),
-    '334': (410, 'The requested story was deleted')
+    '010': (400, 'You\'ve already liked this story'),
+    '011': (400, 'You\'ve already disliked this story'),
+    '012': (400, 'Reaction value must be \'like\' or \'dislike\''),
+    '013': (400, 'Reaction message must not be empty'),
+    '014': (400, 'The story identifier must be an integer'),
+    '015': (403, 'The requested story is a draft'),
+    '016': (404, 'The requested story does not exist'),
+    '017': (410, 'The requested story was deleted')
+    '018': (400, 'The user identifier must be an integer'),
+    '019': (404, 'You must provide an identifier associated to a registered user'),
+    '020': (400, 'The user identifier must be an integer'),
+    '021': (404, 'You must provide an identifier associated to a registered user'),
+    '030': (400, 'The story identifier must be an integer'),
+    '031': (403, 'The requested story is a draft'),
+    '032': (404, 'The requested story does not exist'),
+    '033': (410, 'The requested story was deleted')
 }
 
 

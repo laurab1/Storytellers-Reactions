@@ -14,13 +14,15 @@ from requests.exceptions import Timeout
 from flask import request
 from service import errors
 from service.tasks import *
+from tasks import new_reacts
 
 
 reactions = Blueprint('reactions', __name__)
 
+BP_ID = 0
 
 @reactions.route('/users/<userid>/get_react', methods=['GET'])
-def get_user_react(userid):
+def get_user_react(userid, func_id=2):
     '''
     Retrieves all the reactions from a given user
     Returns:
@@ -122,11 +124,16 @@ def post_story_react(storyid):
     removed = False
     q = Reaction.query.filter_by(reactor_id=userid,
                                  story_id=sid).one_or_none()
+    
+    if not storyid in new_reacts:
+        new_reacts[storyid] = { 'likes': 0, 'dislikes': 0 }
 
     react = 1 if payload['react'] == 'like' else -1
     if q is None or react != q.reaction_val:
         if q is not None and react != q.reaction_val:
             # Remove the old reaction if the new one has different value
+            new_reacts[storyid]['likes'] += 1*react
+            new_reacts[storyid]['dislikes'] += 1*react
             db.session.delete(q)
             db.session.commit()
             removed = True
@@ -134,6 +141,11 @@ def post_story_react(storyid):
         new_reaction.reactor_id = userid
         new_reaction.story_id = sid
         new_reaction.reaction_val = react
+        if not removed:
+            if react == 1:
+                new_reacts[storyid]['likes'] += 1
+            else:
+                new_reacts[storyid]['dislikes'] += 1
         db.session.add(new_reaction)
         db.session.commit()
         db.session.refresh(new_reaction)
@@ -198,17 +210,3 @@ def _check_story(storyid):
         return errors.response('332')
     
     return None
-
-
-###############################################################################################
-
-# Stupid stub function to emulate the Story service
-def _story_stub(storyid):
-    if storyid in range(1,3): # story ok
-        return 1
-    elif storyid in range(3,6): # deleted story
-        return 2
-    elif storyid in range(6,8): # draft story
-        return 3
-    else:
-        return 0

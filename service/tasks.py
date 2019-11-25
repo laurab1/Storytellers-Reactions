@@ -1,14 +1,19 @@
-from flask import current_app
+import requests
 
+from flask import current_app
 from service.extensions import celery
 from service.models import Reaction, db
 
+new_reacts = {}
 
 @celery.task
-def notify_reaction(reactorid, storyid, react):
+def notify_reactions():
     '''
     Add a reaction to the Reactions database
     '''
+    if new_reacts:
+        requests.post(f'{app.config[STORIES_ENDPOINT]}/stories/react_upd', json=new_reacts)
+        new_reacts = {}
     
     return 200
 

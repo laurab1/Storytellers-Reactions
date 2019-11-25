@@ -32,6 +32,7 @@ def create_app(config=None, app_name='reactions', blueprints=None):
     create_celery(app)
     build_blueprints(app, blueprints)
     db.init_app(app)
+    db.create_all(app=app)
     celery.config_from_object(app.config)
 
     return app

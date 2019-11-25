@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 
 DEBUG = True
 SECRET_KEY = 'change me please'
@@ -7,11 +8,11 @@ SECRET_KEY = 'change me please'
 # Upstream requests timeout in seconds
 REQUESTS_TIMEOUT = 0.33
 
-USERS_ENDPOINT = 'localhost:5001'
-STORIES_ENDPOINT = 'localhost:5002'
-REACTIONS_ENDPOINT = 'localhost:5003'
-SEARCH_ENDPOINT = 'localhost:5004'
-AUTH_ENDPOINT = 'localhost:5005'
+USERS_ENDPOINT = os.getenv('USERS_API', 'localhost:5001')
+STORIES_ENDPOINT = os.getenv('STORIES_API', 'localhost:5002')
+REACTIONS_ENDPOINT = os.getenv('REACTIONS_API', 'localhost:5003')
+STATISTICS_ENDPOINT = os.getenv('STATISTICS_API', 'localhost:5004')
+AUTH_ENDPOINT = os.getenv('AUTH_API', 'localhost:5005')
 SQLALCHEMY_DATABASE_URI = 'sqlite:///reactions.db'
 
 # Celery

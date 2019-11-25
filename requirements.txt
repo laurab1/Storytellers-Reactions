@@ -4,3 +4,4 @@ redis==3.3.11
 requests==2.22.0
 flask_jwt_extended==3.24.1
 flask-sqlalchemy
+gunicorn==20.0.0
