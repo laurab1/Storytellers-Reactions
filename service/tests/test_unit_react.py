@@ -130,6 +130,23 @@ def test_get_story_react_success(app, client, reactions, requests_mock):
     reply = reactions.get_story_react(1)
     assert reply.status_code == 200
     assert reply.json['dislikes'] == 1
+    
+
+def test_deleted_story(app, client, reactions, requests_mock, jwt_token):
+    reactions.client = client
+    
+    token = jwt_token.create_token(MOCK_TOKEN_IDENTITY_1)
+    
+    requests_mock.get(f'{app.config["STORIES_ENDPOINT"]}/stories/1',
+                  status_code=200)
+                  
+    reactions.post_story_react(1,MOCK_LIKE_OK, token)
+    
+    requests_mock.get(f'{app.config["STORIES_ENDPOINT"]}/stories/1',
+                  status_code=410)
+                  
+    reply = reactions.get_story_react(1)
+    assert reply.status_code == 410
 
 
 def test_get_story_react_failure(app, client, reactions, requests_mock):
