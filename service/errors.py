@@ -21,9 +21,8 @@ EP_DICT = {
     '014': (400, 'The story identifier must be an integer'),
     '015': (403, 'The requested story is a draft'),
     '016': (404, 'The requested story does not exist'),
-    '017': (410, 'The requested story was deleted')
-    '018': (400, 'The user identifier must be an integer'),
-    '019': (404, 'You must provide an identifier associated to a registered user'),
+    '017': (410, 'The requested story was deleted'),
+    '018': (404, 'You must provide an identifier associated to a registered user'),
     '020': (400, 'The user identifier must be an integer'),
     '021': (404, 'You must provide an identifier associated to a registered user'),
     '030': (400, 'The story identifier must be an integer'),

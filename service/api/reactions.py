@@ -14,7 +14,6 @@ from requests.exceptions import Timeout
 from flask import request
 from service import errors
 from service.tasks import *
-from tasks import new_reacts
 
 
 reactions = Blueprint('reactions', __name__)
@@ -35,7 +34,7 @@ def get_user_react(userid, func_id=2):
     try:
         uid = int(userid)
     except ValueError:
-        return errors.response('321')
+        return errors.response('020')
     
     # Tries to retrieve the user from the User service
     try:
@@ -46,7 +45,7 @@ def get_user_react(userid, func_id=2):
         return jsonify({}), 500
     
     if resp.status_code == 404: # Not registered user
-        return errors.response('322')
+        return errors.response('021')
     
     # Retrieve reactions and compute them
     q = Reaction.query.filter_by(reactor_id=userid)
@@ -67,7 +66,7 @@ def get_story_react(storyid):
         410 -> The requested story was previously deleted
     '''
     # Checks
-    response = _check_story(storyid)
+    response = _check_story(storyid, 'get')
     
     if response is not None:
         return response
@@ -95,7 +94,7 @@ def post_story_react(storyid):
         410 -> The requested story was previously deleted        
     '''
     # ERROR CHECK (story)
-    response = _check_story(storyid)
+    response = _check_story(storyid, 'post')
     
     if response is not None:
         return response
@@ -109,16 +108,16 @@ def post_story_react(storyid):
     value = 'react' in payload
     
     if not value:
-        return errors.response('314')
+        return errors.response('013')
     
     if payload['react'] != 'like' and payload['react'] != 'dislike':
-        return errors.response('313')
+        return errors.response('012')
     
     # ERROR CHECK (user)
     # Here I just need if the user is actually registered
     current_user = get_jwt_identity()
     if current_user is None:
-        errors.response('322')
+        errors.response('018')
     userid = current_user['user_id']
 
     removed = False
@@ -155,8 +154,8 @@ def post_story_react(storyid):
         return jsonify(message=message)
 
     if react == 1:
-        return errors.response('311')
-    return errors.response('312')
+        return errors.response('010')
+    return errors.response('011')
 
 
 ###################################### UTILITY FUNCTIONS ######################################
@@ -177,7 +176,7 @@ def _compute_reacts(q):
             dislikes += 1
     return likes, dislikes
 
-def _check_story(storyid):
+def _check_story(storyid, method):
     '''
     Checks if a story exists, if it is deleted or a draft
     
@@ -191,7 +190,10 @@ def _check_story(storyid):
     try:
         sid = int(storyid)
     except ValueError:
-        return errors.response('331')
+        if method == 'get':
+            return errors.response('030')
+        else:
+            return errors.response('014')
     
     try:
         resp = requests.get(f'{app.config["STORIES_ENDPOINT"]}/stories/{storyid}',
@@ -202,11 +204,20 @@ def _check_story(storyid):
     
     # checks whether the story exists, if it is a draft, or if it was previously deleted
     if resp.status_code == 404: # the story does not exists
-        return errors.response('333')
+        if method == 'get':
+            return errors.response('032')
+        else:
+            return errors.response('016')
     if resp.status_code == 410:
         remove_deleted.delay(storyid)
-        return errors.response('334')
+        if method == 'get':
+            return errors.response('033')
+        else:
+            return errors.response('017')
     if resp.status_code == 403:
-        return errors.response('332')
+        if method == 'get':
+            return errors.response('031')
+        else:
+            return errors.response('015')
     
     return None
