@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from service.app import create_app, create_celery
-from tasks import notify_reactions
+from service.tasks import notify_reactions
 
 app = create_app(config='config.py')
 celery = create_celery(app)

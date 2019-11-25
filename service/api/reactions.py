@@ -13,7 +13,7 @@ from service.models import db, Reaction
 from requests.exceptions import Timeout
 from flask import request
 from service import errors
-from service.tasks import *
+from service.tasks import reacts_lock, new_reacts, remove_deleted
 
 
 reactions = Blueprint('reactions', __name__)
@@ -123,16 +123,13 @@ def post_story_react(storyid, func_id=1):
     removed = False
     q = Reaction.query.filter_by(reactor_id=userid,
                                  story_id=sid).one_or_none()
-    
-    if not storyid in new_reacts:
-        new_reacts[storyid] = { 'likes': 0, 'dislikes': 0 }
 
     react = 1 if payload['react'] == 'like' else -1
     if q is None or react != q.reaction_val:
         if q is not None and react != q.reaction_val:
             # Remove the old reaction if the new one has different value
-            new_reacts[storyid]['likes'] += 1*react
-            new_reacts[storyid]['dislikes'] += 1*react
+            tmp_like = 1*react
+            tmp_dislike = -1*react
             db.session.delete(q)
             db.session.commit()
             removed = True
@@ -142,14 +139,24 @@ def post_story_react(storyid, func_id=1):
         new_reaction.reaction_val = react
         if not removed:
             if react == 1:
-                new_reacts[storyid]['likes'] += 1
+                tmp_like = 1
+                tmp_dislike = 0
             else:
-                new_reacts[storyid]['dislikes'] += 1
+                tmp_like = 0
+                tmp_dislike = 1
+
         db.session.add(new_reaction)
         db.session.commit()
         db.session.refresh(new_reaction)
-        # votes are notified asynchronously to the story service
-        #notify_reaction.delay(current_user.id, storyid, react)
+
+        # Updating the dictionary of the reactions to be sent to the
+        # stories endpoint
+        with reacts_lock:
+            if not storyid in new_reacts:
+                new_reacts[storyid] = {'likes': 0, 'dislikes': 0 }
+            new_reacts[storyid]['likes'] += tmp_like
+            new_reacts[storyid]['dislikes'] += tmp_dislike
+            
         message = 'Reaction registered' if not removed else 'Reaction updated'
         return jsonify(message=message)
 
