@@ -105,7 +105,7 @@ def post_story_react(storyid, func_id=1):
     payload = request.get_json()
     
     # checks whether the payload is empty or ill-formed
-    value = 'react' in payload
+    value = payload is not None and 'react' in payload
     
     if not value:
         return errors.response(f'{BP_ID}{func_id}3')
