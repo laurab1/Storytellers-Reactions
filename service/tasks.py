@@ -1,9 +1,11 @@
 import requests
 
-from flask import current_app
+from flask import current_app as app
 from service.extensions import celery
 from service.models import Reaction, db
+from threading import RLock
 
+reacts_lock = RLock()
 new_reacts = {}
 
 @celery.task
@@ -11,11 +13,10 @@ def notify_reactions():
     '''
     Add a reaction to the Reactions database
     '''
-    if new_reacts:
-        requests.post(f'{app.config[STORIES_ENDPOINT]}/stories/react_upd', json=new_reacts)
-        new_reacts = {}
-    
-    return 200
+    with reacts_lock:
+        if new_reacts:
+            requests.post(f'{app.config["STORIES_ENDPOINT"]}/stories/react_upd', json=new_reacts)
+            new_reacts = {}
 
 
 @celery.task

@@ -4,9 +4,8 @@ from flask_sqlalchemy import SQLAlchemy
 
 from sqlalchemy.ext.hybrid import hybrid_property
 
+from service.extensions import db
 
-
-db = SQLAlchemy()
 
 class Reaction(db.Model):
     __tablename__ = 'reaction'
