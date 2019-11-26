@@ -1,24 +1,22 @@
 import json
-import requests
-from flask import Blueprint
-from service.extensions import db
-from flask import current_app as app
-from flask import jsonify
-from flask_jwt_extended import (
-    JWTManager, jwt_required, create_access_token,
-    get_jwt_identity
-)
-from flask import abort
-from service.models import db, Reaction
-from requests.exceptions import Timeout
-from flask import request
-from service import errors
-from service.tasks import reacts_lock, new_reacts, remove_deleted
 
+import requests
+from flask import Blueprint, abort
+from flask import current_app as app
+from flask import jsonify, request
+from flask_jwt_extended import (JWTManager, create_access_token,
+                                get_jwt_identity, jwt_required)
+from requests.exceptions import Timeout
+
+from service import errors
+from service.extensions import db
+from service.models import Reaction, db
+from service.tasks import new_reacts, reacts_lock, remove_deleted
 
 reactions = Blueprint('reactions', __name__)
 
 BP_ID = 0
+
 
 @reactions.route('/users/<userid>/get_react', methods=['GET'])
 def get_user_react(userid, func_id=2):
@@ -28,31 +26,31 @@ def get_user_react(userid, func_id=2):
         200 -> User reactions retrieved successfully
         404 -> User not found
     '''
-    
+
     # ERROR CHECK
     # Raises exception if the provided id is not an integer
     try:
         uid = int(userid)
     except ValueError:
         return errors.response(f'{BP_ID}{func_id}0')
-    
+
     # Tries to retrieve the user from the User service
     try:
         resp = requests.get(f'{app.config["USERS_ENDPOINT"]}/user/{userid}',
-                                        timeout=app.config['REQUESTS_TIMEOUT'],
-                                        json=request.json)
+                            timeout=app.config['REQUESTS_TIMEOUT'],
+                            json=request.json)
     except Timeout:
         return jsonify({}), 500
-    
-    if resp.status_code == 404: # Not registered user
+
+    if resp.status_code == 404:  # Not registered user
         return errors.response(f'{BP_ID}{func_id}1')
-    
+
     # Retrieve reactions and compute them
     q = Reaction.query.filter_by(reactor_id=userid)
-            
+
     likes, dislikes = _compute_reacts(q)
-           
-    return jsonify({'likes':likes, 'dislikes':dislikes})        
+
+    return jsonify({'likes': likes, 'dislikes': dislikes})
 
 
 @reactions.route('/stories/<storyid>/get_react', methods=['GET'])
@@ -67,17 +65,17 @@ def get_story_react(storyid, func_id=0):
     '''
     # Checks
     response = _check_story(storyid, 'get')
-    
+
     if response is not None:
         return response
-    
+
     sid = int(storyid)
     q = Reaction.query.filter_by(story_id=storyid)
-    
+
     # Compute reactions to the story
     likes, dislikes = _compute_reacts(q)
-           
-    return jsonify({'likes':likes, 'dislikes':dislikes})
+
+    return jsonify({'likes': likes, 'dislikes': dislikes})
 
 
 @reactions.route('/stories/<storyid>/react', methods=['POST'])
@@ -91,34 +89,34 @@ def post_story_react(storyid, func_id=1):
         400 -> Reaction not posted (story already liked/disliked or ill-formed request)
         404 -> The requested story does not exist
         403 -> The requested story is a draft
-        410 -> The requested story was previously deleted        
+        410 -> The requested story was previously deleted
     '''
     # ERROR CHECK (story)
     response = _check_story(storyid, 'post')
-    
+
     if response is not None:
         return response
-    
+
     sid = int(storyid)
-    
+
     # ERROR CHECK (payload)
     payload = request.get_json()
-    
+
     # checks whether the payload is empty or ill-formed
     value = payload is not None and 'react' in payload
-    
+
     if not value:
         return errors.response(f'{BP_ID}{func_id}3')
-    
+
     if payload['react'] != 'like' and payload['react'] != 'dislike':
         return errors.response(f'{BP_ID}{func_id}2')
-    
+
     # ERROR CHECK (user)
     # Here I just need if the user is actually registered
     current_user = get_jwt_identity()
     if current_user is None:
         errors.response(f'{BP_ID}{func_id}8')
-    userid = current_user['user_id']
+    userid = current_user['id']
 
     removed = False
     q = Reaction.query.filter_by(reactor_id=userid,
@@ -153,10 +151,10 @@ def post_story_react(storyid, func_id=1):
         # stories endpoint
         with reacts_lock:
             if not storyid in new_reacts:
-                new_reacts[storyid] = {'likes': 0, 'dislikes': 0 }
+                new_reacts[storyid] = {'likes': 0, 'dislikes': 0}
             new_reacts[storyid]['likes'] += tmp_like
             new_reacts[storyid]['dislikes'] += tmp_dislike
-            
+
         message = 'Reaction registered' if not removed else 'Reaction updated'
         return jsonify(message=message)
 
@@ -170,7 +168,7 @@ def post_story_react(storyid, func_id=1):
 def _compute_reacts(q):
     '''
     Computes the number of likes/dislikes for a given story or a given user
-    
+
     Returns:
         likes, dislikes -> the number of the likes/dislikes to the story identified by storyid or from the user identified by userid
     '''
@@ -183,10 +181,11 @@ def _compute_reacts(q):
             dislikes += 1
     return likes, dislikes
 
+
 def _check_story(storyid, method):
     '''
     Checks if a story exists, if it is deleted or a draft
-    
+
     Returns:
         400 -> Story identifier is not an integer
         404 -> The requested story does not exist
@@ -201,16 +200,16 @@ def _check_story(storyid, method):
             return errors.response(f'{BP_ID}30')
         else:
             return errors.response(f'{BP_ID}14')
-    
+
     try:
         resp = requests.get(f'{app.config["STORIES_ENDPOINT"]}/stories/{storyid}',
-                                        timeout=app.config['REQUESTS_TIMEOUT'],
-                                        json=request.json)
+                            timeout=app.config['REQUESTS_TIMEOUT'],
+                            json=request.json)
     except Timeout:
         return jsonify({}), 500
-    
+
     # checks whether the story exists, if it is a draft, or if it was previously deleted
-    if resp.status_code == 404: # the story does not exists
+    if resp.status_code == 404:  # the story does not exists
         if method == 'get':
             return errors.response(f'{BP_ID}32')
         else:
@@ -226,5 +225,5 @@ def _check_story(storyid, method):
             return errors.response(f'{BP_ID}31')
         else:
             return errors.response(f'{BP_ID}15')
-    
+
     return None
