@@ -17,22 +17,29 @@ BLUEPRINTS = (reactions,)
 
 def create_app(config=None, app_name='reactions', blueprints=None):
     app = Flask(app_name)
-    
+
     if config:
         app.config.from_pyfile(config)
-        
+
     md.init_app(app)
-    md.create_all(app=app)
+    try:
+        md.create_all(app=app)
+    except Exception as e:
+        print("DB already existed")
 
     jwt = JWTManager(app)
-    
+
     if blueprints is None:
         blueprints = BLUEPRINTS
 
     create_celery(app)
     build_blueprints(app, blueprints)
     db.init_app(app)
-    db.create_all(app=app)
+    try:
+        db.init_all(app=app)
+    except Exception as e:
+        print("DB already existed")
+
     celery.config_from_object(app.config)
 
     return app
