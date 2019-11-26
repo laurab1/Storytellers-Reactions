@@ -7,5 +7,4 @@ WORKDIR /code
 
 RUN pip install -r requirements.txt
 
-CMD ["python", "celery_entry.py", "beat"]
 CMD ["gunicorn", "-c", "gunicorn_config.py", "entry:app"]

@@ -10,3 +10,6 @@ before_script:
 
 script:
     - tox -e py36
+
+services:
+  - redis-server

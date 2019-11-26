@@ -2,7 +2,7 @@
 from service.app import create_app, create_celery
 from service.tasks import notify_reactions
 
-app = create_app(config='config.py')
+app = create_app(config='service/config.py')
 celery = create_celery(app)
 
 POLLING_RATE = 1.0

@@ -14,6 +14,7 @@ REACTIONS_ENDPOINT = os.getenv('REACTIONS_API', 'localhost:5003')
 STATISTICS_ENDPOINT = os.getenv('STATISTICS_API', 'localhost:5004')
 AUTH_ENDPOINT = os.getenv('AUTH_API', 'localhost:5005')
 SQLALCHEMY_DATABASE_URI = 'sqlite:///reactions.db'
+REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
 
 # Celery
 BROKER_TRANSPORT = 'redis'

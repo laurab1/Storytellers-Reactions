@@ -1,4 +1,5 @@
 import json
+import redis
 
 import requests
 from flask import Blueprint, abort
@@ -11,7 +12,7 @@ from requests.exceptions import Timeout
 from service import errors
 from service.extensions import db
 from service.models import Reaction, db
-from service.tasks import new_reacts, reacts_lock, remove_deleted
+from service.tasks import remove_deleted
 
 reactions = Blueprint('reactions', __name__)
 
@@ -149,11 +150,14 @@ def post_story_react(storyid, func_id=1):
 
         # Updating the dictionary of the reactions to be sent to the
         # stories endpoint
-        with reacts_lock:
-            if not storyid in new_reacts:
-                new_reacts[storyid] = {'likes': 0, 'dislikes': 0}
-            new_reacts[storyid]['likes'] += tmp_like
-            new_reacts[storyid]['dislikes'] += tmp_dislike
+        r = redis.Redis.from_url(app.config['REDIS_URL'])
+        new_reacts = r.get('new_reacts')
+        new_reacts = json.loads(new_reacts.decode('utf-8')) if new_reacts else {}
+        if not storyid in new_reacts:
+            new_reacts[storyid] = {'likes': 0, 'dislikes': 0}
+        new_reacts[storyid]['likes'] += tmp_like
+        new_reacts[storyid]['dislikes'] += tmp_dislike
+        r.set('new_reacts', json.dumps(new_reacts))
 
         message = 'Reaction registered' if not removed else 'Reaction updated'
         return jsonify(message=message)

@@ -3,20 +3,21 @@ import requests
 from flask import current_app as app
 from service.extensions import celery
 from service.models import Reaction, db
-from threading import RLock
+import redis
+import json
 
-reacts_lock = RLock()
-new_reacts = {}
 
 @celery.task
 def notify_reactions():
     '''
     Add a reaction to the Reactions database
     '''
-    with reacts_lock:
-        if new_reacts:
-            requests.post(f'{app.config["STORIES_ENDPOINT"]}/stories/react_upd', json=new_reacts)
-            new_reacts = {}
+    r = redis.Redis.from_url(app.config['REDIS_URL'])
+    new_reacts = r.get('new_reacts')
+    if new_reacts:
+        new_reacts = json.loads(new_reacts.decode('utf-8'))
+        requests.post(f'{app.config["STORIES_ENDPOINT"]}/stories/react_upd', json=new_reacts)
+        new_reacts = r.delete('new_reacts')
 
 
 @celery.task

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 
 TESTING = True
 DEBUG = True
@@ -13,6 +14,7 @@ REACTIONS_ENDPOINT = 'localhost:5003'
 SEARCH_ENDPOINT = 'localhost:5004'
 AUTH_ENDPOINT = 'localhost:5005'
 SQLALCHEMY_DATABASE_URI = 'sqlite:///reactions.db'
+REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
 
 SECRET_KEY = 'some-secret-string-CHANGE-ME'
 JWT_SECRET_KEY = 'jwt-secret-string-CHANGE-ME'
